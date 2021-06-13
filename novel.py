@@ -8,7 +8,7 @@ sv = Service('小说续写', bundle='娱乐', help_='''
 '''.strip())
 
 
-continuation = sv.on_fullmatch('续写', only_group=False)
+continuation = sv.on_prefix('续写', only_group=False)
 
 
 @continuation.handle()
@@ -27,13 +27,8 @@ async def novel_continue_rec(bot: Bot, event: CQEvent, state: T_State):
 
 @continuation.got('text', prompt='{prompt}')
 async def novel_continue(bot: Bot, event: CQEvent, state: T_State):
-    user_info = await bot.get_stranger_info(user_id=event.user_id)
-    nickname = user_info.get('nickname', '未知用户')
     text = state['text']
-    await bot.send(event, '请稍等片刻~')
+    await continuation.send('请稍等片刻~', call_header=True)
     res = await get_single_continuation(text)
     if res:
-        if isinstance(event, GroupMessageEvent):
-            await continuation.finish(f'>{nickname}\n' + res)
-        elif isinstance(event, PrivateMessageEvent):
-            await continuation.finish(res)
+        await continuation.finish(res, call_header=True)
