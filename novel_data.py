@@ -1,5 +1,6 @@
 import asyncio
 import random
+from traceback import format_exc
 import salmon
 from salmon import aiohttpx
 
@@ -69,9 +70,10 @@ async def get_single_continuation(text: str):
             salmon.logger.info(f'正在等待服务器返回第{i+1}段续写结果')
             continuation = await poll_for_result(nid, xid)
             result += random.choice(continuation)
+            await asyncio.sleep(1)
         salmon.logger.info('续写完成')
         return result + '......'
     except Exception as e:
-        salmon.logger.error(f'发生错误{e}')
+        salmon.logger.error(f'发生错误{format_exc()}')
         salmon.logger.exception(e)
-        return f'发生错误{e}'
+        return f'发生错误{format_exc()}'
