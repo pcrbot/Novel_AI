@@ -1,6 +1,6 @@
 import asyncio
 import random
-from traceback import format_exc
+import time
 import salmon
 from salmon import aiohttpx
 
@@ -60,24 +60,20 @@ async def poll_for_result(nid: str, xid: str):
 
 
 async def get_single_continuation(text: str):
-    for i in range(10): # 暴力解决104错误
-        try:
-            result = ''
-            for i in range(3): # 连续续写三次
-                if i == 1:
-                    result = text
-                nid = await get_nid(result)
-                xid = await submit_to_ai(result, nid)
-                salmon.logger.info(f'正在等待服务器返回第{i+1}段续写结果')
-                continuation = await poll_for_result(nid, xid)
-                result += random.choice(continuation)
-                await asyncio.sleep(1)
-            salmon.logger.info('续写完成')
-            return result + '......'
-        except Exception as e:
-            if i >= 9:
-                salmon.logger.error(f'发生错误{format_exc()}')
-                salmon.logger.exception(e)
-                return f'发生错误：{e}\n请联系维护.'
-            else:
-                await asyncio.sleep(1)
+    try:
+        result = ''
+        for i in range(3): # 连续续写三次
+            if i == 1:
+                result = text
+            nid = await get_nid(result)
+            xid = await submit_to_ai(result, nid)
+            salmon.logger.info(f'正在等待服务器返回第{i+1}段续写结果')
+            continuation = await poll_for_result(nid, xid)
+            result += random.choice(continuation)
+            time.sleep(0.5)
+        salmon.logger.info('续写完成')
+        return result + '......'
+    except Exception as e:
+        salmon.logger.error(f'发生错误{e}')
+        salmon.logger.exception(e)
+        return f'发生错误：{e}\n请联系维护.'
